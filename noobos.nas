@@ -1,8 +1,9 @@
 ; noob-os
 ; TAB=4
-
+    ORG     0x7c00              ;指明程序装载的地址           0x00007c00-0x00007dff启动区内容装载地址，规定
 ; 标准FAT12格式软盘专用的代码(可参考FAT12引导扇区的格式 https://zhuanlan.zhihu.com/p/121807427)(0,62)
-    DB      0xeb,   0x4e,   0x90;BS_jmpBOOT(0,3)              jmp LABEL_START nop
+    JMP     entry
+    DB      0x90                ;BS_jmpBOOT(0,3)              jmp LABEL_START nop
     DB      "NOOBLOAD"          ;BS_OEMName(3,8)              启动区的名称可以是任意字符(8字节)厂商名
     DW      512                 ;BPB_BytesPerSec(11,2)        每个扇区(sector)的大小(必须是512字节)
     DB      1                   ;BPB_SecPerClus(13,1)         簇(cluster)windows/块(block)linux的大小(逻辑概念)
@@ -25,18 +26,31 @@
     RESB    18                  ;空出18个字节(62,18)          ?这个地方为什么要空18个字节，不是很理解，但是不加就有问题
  
 ; 程序主体(80,36)
- 	DB	    0xb8, 0x00, 0x00, 0x8e, 0xd0, 0xbc, 0x00, 0x7c
-	DB	    0x8e, 0xd8, 0x8e, 0xc0, 0xbe, 0x74, 0x7c, 0x8a
-	DB	    0x04, 0x83, 0xc6, 0x01, 0x3c, 0x00, 0x74, 0x09
-	DB	    0xb4, 0x0e, 0xbb, 0x0f, 0x00, 0xcd, 0x10, 0xeb
-	DB	    0xee, 0xf4, 0xeb, 0xfd
-    
-; 信息显示部分(116,412)
-    DB      0x0a,  0x0a         ;两个换行
-    DB      "hello, world"
+entry:
+    MOV     AX,0                ;寄存器初始化
+    MOV     SS,AX               
+    MOV     SP,0x7c00
+    MOV     DS,AX
+    MOV     SI,msg              ;把msg的地址值赋给SI
+putloop:
+    MOV     AL,[SI]             ;将SI地址的1字节内容读入到AL,MOV必须保证源数据和目的数据必须一致。[]表示内存地址的意思,[]可作用的寄存器有限,(可作用数字)只有BX、BP、SI、DI。其它寄存器没有对应电路
+    ADD     SI,1                ;将SI地址加1
+    CMP     AL,0                ;如果此时AL里面的值是0就跳到fin方法
+    JE      fin         
+    MOV     AH,0x0e             ;显示一个文字
+    MOV     BX,15               ;指定字符的颜色
+    INT     0x10                ;中断,调用0x10(16号函数)控制显卡让字符显示出来
+    JMP     putloop
+fin:
+    HLT                         ;让CPU进入待机状态(halt停止)
+    JMP     fin                 ;无限循环
+msg:
+    DB      0x0a,0x0a           ;两个换行
+    DB      "HELLO,NOOB-OS"
     DB      0x0a                ;换行
     DB      0
-    RESB    0x1fe-$             ;填写0x00，直到0x001fe(510)
+    
+    RESB    0x7dfe-$            ;填充0x00直到0x7dfe(510)这个地址
  
 ; 启动区结束符(510,2)
     DB       0x55, 0xaa
