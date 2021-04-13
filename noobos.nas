@@ -38,12 +38,21 @@ entry:
     MOV     DH,0                ;指定0号磁头
     MOV     CL,2                ;指定2号扇面
     
+    MOV     SI,0                ;记录失败的次数 
+retry:
     MOV     AH,0x02             ;设定是读盘操作
     MOV     AL,1                ;设定处理的扇区数为1
     MOV     BX,0                ;初始化BX寄存器，作为缓冲地址的初始地址
     MOV     DL,0x00             ;设定驱动器号
     INT     0x13                ;调用0x13号中断函数把C0-H0-S2的内容装载到0x08200-0x83ff
-    JC      error               ;如果报错就跳转error
+    JNC     fin                 ;没出错就跳转fin
+    ADD     SI,1                ;出错SI加1
+    CMP     SI,5                ;比较SI与5
+    JAE     error               ;SI>=5时，跳转到error
+    MOV     AH,0x00
+    MOV     DL,0x00             ;设定驱动器号
+    INT     0x13                ;重置驱动
+    JMP     retry   
 putloop:
     MOV     AL,[SI]             ;将SI地址的1字节内容读入到AL,MOV必须保证源数据和目的数据必须一致。[]表示内存地址的意思,[]可作用的寄存器有限,(可作用数字)只有BX、BP、SI、DI。其它寄存器没有对应电路
     ADD     SI,1                ;将SI地址加1
