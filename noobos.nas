@@ -1,5 +1,6 @@
 ; noob-os
 ; TAB=4
+CYLS    EQU     10              ;设定柱面的个数
     ORG     0x7c00              ;指明程序装载的地址           0x00007c00-0x00007dff启动区内容装载地址，规定
 ; 标准FAT12格式软盘专用的代码(可参考FAT12引导扇区的格式 https://zhuanlan.zhihu.com/p/121807427)(0,62)
     JMP     entry
@@ -60,6 +61,14 @@ next:
     ADD     CL,1                ;扇面数+1
     CMP     CL,18               ;比较扇面数与18
     JBE     readloop            ;小于等于则继续读下一个扇面
+    MOV     CL,1                ;重新设置扇面数为1
+    ADD     DH,1                ;磁头号+1
+    CMP     DH,2                
+    JBE     readloop            ;如果磁头号小于2,说明正反面没读完，继续加载
+    MOV     DH,0                ;重置磁头号是0
+    ADD     CH,1                ;柱面号+1
+    CMP     CH,CYLS             
+    JB      readloop            ;如果柱面号小于指定柱面号CYLS,继续加载
 putloop:
     MOV     AL,[SI]             ;将SI地址的1字节内容读入到AL,MOV必须保证源数据和目的数据必须一致。[]表示内存地址的意思,[]可作用的寄存器有限,(可作用数字)只有BX、BP、SI、DI。其它寄存器没有对应电路
     ADD     SI,1                ;将SI地址加1
