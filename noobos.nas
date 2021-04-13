@@ -30,8 +30,20 @@ entry:
     MOV     AX,0                ;寄存器初始化
     MOV     SS,AX               
     MOV     SP,0x7c00
-    MOV     DS,AX
-    MOV     SI,msg              ;把msg的地址值赋给SI
+    MOV     DS,AX               ;DS初始化,DS是默认段寄存器,只要指定内存的地址，必须同时指定段寄存器,不指定的话默认是DS
+; 读盘
+    MOV     AX,0x0820
+    MOV     ES,AX
+    MOV     CH,0                ;指定0号柱面
+    MOV     DH,0                ;指定0号磁头
+    MOV     CL,2                ;指定2号扇面
+    
+    MOV     AH,0x02             ;设定是读盘操作
+    MOV     AL,1                ;设定处理的扇区数为1
+    MOV     BX,0                ;初始化BX寄存器，作为缓冲地址的初始地址
+    MOV     DL,0x00             ;设定驱动器号
+    INT     0x13                ;调用0x13号中断函数把C0-H0-S2的内容装载到0x08200-0x83ff
+    JC      error               ;如果报错就跳转error
 putloop:
     MOV     AL,[SI]             ;将SI地址的1字节内容读入到AL,MOV必须保证源数据和目的数据必须一致。[]表示内存地址的意思,[]可作用的寄存器有限,(可作用数字)只有BX、BP、SI、DI。其它寄存器没有对应电路
     ADD     SI,1                ;将SI地址加1
@@ -44,9 +56,11 @@ putloop:
 fin:
     HLT                         ;让CPU进入待机状态(halt停止)
     JMP     fin                 ;无限循环
+error:
+    MOV     SI,msg
 msg:
     DB      0x0a,0x0a           ;两个换行
-    DB      "HELLO,NOOB-OS"
+    DB      "LOAD,ERROR"
     DB      0x0a                ;换行
     DB      0
     
