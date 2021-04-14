@@ -89,8 +89,8 @@ msg:
     DB      0x0a                ;换行
     DB      0
     
-    RESB    0x7dfe-$            ;填充0x00直到0x7dfe(510)这个地址
- 
+   ;RESB    0x7dfe-$            ;nask填充0x00直到0x7dfe(510)这个地址
+	times 	510-($-$$) db 0		;nasm与上面同理	
 ; 启动区结束符(510,2)
     DB       0x55, 0xaa
  
