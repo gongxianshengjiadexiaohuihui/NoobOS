@@ -1,10 +1,27 @@
      1                                  ;noob-os
      2                                  ;TAB=4
-     3                                  	ORG		0xc200		;这个程序要被加载到内存的地址
-     4 00000000 B013                    	MOV		AL,0x13		;13H   640×480256色
-     5 00000002 B400                    	MOV 	AH,0x00	
-     6 00000004 CD10                    	INT		0x10
-     7                                  fin:
-     8 00000006 F4                          HLT
-     9                                      JMPfin
-     9          ******************       warning: label alone on a line without a colon might be in error [-w+label-orphan]
+     3                                  
+     4                                  ;BOOT_INFO
+     5                                  CYLS	EQU		0x0ff0			;设定启动区
+     6                                  FLAG	EQU		0x0ff1			;记录键盘标志位,各种功能键的的开关状态比如NUM LOCK、CAPS LOCK等
+     7                                  VMODE	EQU		0x0ff2			;关于颜色数目的信息，颜色的位数
+     8                                  SCRNX	EQU		0x0ff4			;分辨率的x
+     9                                  SCRNY	EQU		0x0ff6			;分辨率的y
+    10                                  VRAM	EQU		0x0ff8			;图像缓冲区的开始地址
+    11                                  
+    12                                  		ORG		0xc200			;这个程序要被加载到内存的地址
+    13 00000000 B013                    		MOV		AL,0x13			;13H	VGA显卡，320*200*8位彩色
+    14 00000002 B400                    		MOV 	AH,0x00	
+    15 00000004 CD10                    		INT		0x10
+    16 00000006 C606F20F08              		MOV		BYTE[VMODE],8	;记录画面模式
+    17 0000000B C706F40F4001            		MOV		WORD[SCRNX],320 
+    18 00000011 C706F60FC800            		MOV		WORD[SCRNY],200
+    19 00000017 66C706F80F00000A00      		MOV		DWORD[VRAM],0x000a0000	;VRAM是从0xa0000到0xaffff的64KB。这里之所以前面加3个0推测是没有3个字节的"数据大小",只有1、2、4个字节
+    20                                  
+    21                                  ;通过中断获取键盘上标志
+    22 00000020 B402                    		MOV		AH,0x02
+    23 00000022 CD16                    		INT		0x16
+    24 00000024 A2F10F                  		MOV		[FLAG],AL
+    25                                  fin:
+    26 00000027 F4                      		HLT
+    27 00000028 EBFD                    		JMP		fin

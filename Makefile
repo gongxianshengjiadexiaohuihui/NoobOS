@@ -14,12 +14,12 @@ img :ipl.bin noobos.bin Makefile
 
 #启动区文件编译规则
 
-#需要准备的源文件 ipl.nas Makefile
-ipl.bin :ipl.nas Makefile
-	./tools/nasm.exe ipl.nas -o ipl.bin -l ipl.lst
+#需要准备的源文件 ipl.asm Makefile
+ipl.bin :ipl.asm Makefile
+	./tools/nasm.exe ipl.asm -o ipl.bin -l ipl.lst
 
 #系统文件编译规则
 
-#需要准备的源文件
-noobos.bin :noobos.nas Makefile
-	./tools/nasm.exe noobos.nas -o noobos.bin -l noobos.lst
+#需要准备的源文件 noobos.asm Makefile
+noobos.bin :noobos.asm Makefile
+	./tools/nasm.exe noobos.asm -o noobos.bin -l noobos.lst

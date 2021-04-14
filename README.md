@@ -1,6 +1,6 @@
 # FAT12格式
 
-![preview](C:\Users\admin\Desktop\笔记\noobOS\NoobOS\img\v2-1c908247ddcfac45405ff5b7420a6138_r.jpg)
+![preview](img/v2-1c908247ddcfac45405ff5b7420a6138_r.jpg)
 
 MBR:1个扇区
 
@@ -12,7 +12,15 @@ FAT2:9个扇区
 
 数据区:0x4200-0x16800
 
+# 内存分布地图
+
+![img](img/1603899-20200217210917318-1795292273.png)
+
+![img](img/1603899-20200216213425640-1168277108.png)
+
 # 工具
+
+位于tools目录
 
 ## nask.exe
 
@@ -22,9 +30,13 @@ FAT2:9个扇区
 
 根据Makefile中定义的规则进行编译
 
-# 文件
+## FAT12tool
 
-## nas
+java写的组装镜像工具类
+
+# 文件格式
+
+## asm
 
 汇编源文件
 
