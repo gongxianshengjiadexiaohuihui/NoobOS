@@ -1,3 +1,10 @@
-     1                                  fin:
-     2 00000000 F4                          HLT
-     3 00000001 EBFD                        JMP fin
+     1                                  ;noob-os
+     2                                  ;TAB=4
+     3                                  	ORG		0xc200		;这个程序要被加载到内存的地址
+     4 00000000 B013                    	MOV		AL,0x13		;13H   640×480256色
+     5 00000002 B400                    	MOV 	AH,0x00	
+     6 00000004 CD10                    	INT		0x10
+     7                                  fin:
+     8 00000006 F4                          HLT
+     9                                      JMPfin
+     9          ******************       warning: label alone on a line without a colon might be in error [-w+label-orphan]
