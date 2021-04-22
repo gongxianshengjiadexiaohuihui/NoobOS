@@ -12,8 +12,9 @@ VMODE	EQU		0x0ff2			;关于颜色数目的信息，颜色的位数
 SCRNX	EQU		0x0ff4			;分辨率的x
 SCRNY	EQU		0x0ff6			;分辨率的y
 VRAM	EQU		0x0ff8			;图像缓冲区的开始地址
-
+;通过文件观察，文件的内容是在0x4200处。现在的程序是从启动区开始，把磁盘上的内容装载到内存0x8000号地址，所以磁盘0x4200处的内容就应该位于内存0x8000+0x4200=0xc200号地址。
 		ORG		0xc200			;这个程序要被加载到内存的地址（0xc0000-0xc7fff为显卡bios使用）
+		
 		MOV		AL,0x13			;13H	VGA显卡，320*200*8位彩色
 		MOV 	AH,0x00	
 		INT		0x10
@@ -26,20 +27,20 @@ VRAM	EQU		0x0ff8			;图像缓冲区的开始地址
 		MOV		AH,0x02
 		INT		0x16
 		MOV		[FLAG],AL
-fin:
-		HLT
-		JMP		fin
 ;初始化PIC芯片
 		MOV		AL,0xff
 		OUT		0x21,AL			;0x21是主PIC写入端口，
 		NOP						;如果继续执行out，似乎不起作用
 		OUT		0xa1,AL			;0x20是从PIC写入端口
 		
+		CLI
 ;打开A20GATE，以便CPU可以访问1MB以上的内存
 		IN		AL,0x92	
 		OR      AL,0x02  		;将位1变为1 or 00000010b，关闭是and 11111101b
 		OUT		0x92,AL
+
 ;切换到保护模式
+[INSTRSET "i486p"]
 		LGDT	[GDTR0]			;设置临时的GDT，进入保护模式前必须设定GDT。
 		MOV		EAX,CR0			;CR0 是 32 位的寄存器，包含了一系列用于控制处理器操作模式和运行状态的标志位
 		AND		EAX,0x7fffffff	;设置位31为0(为了禁止分页)
@@ -57,9 +58,6 @@ pipelineflush:
 		MOV		FS,AX
 		MOV		GS,AX
 		MOV		SS,AX
-		
-		ALIGNB	16				;地址对其，能被16整除
-
 ;转运bootpack到指定位置
 		MOV		ESI,bootpack	;源地址
 		MOV		EDI,BOTPAK		;目标地址
@@ -73,7 +71,7 @@ pipelineflush:
 		MOV		ECX,512/4		;数据大小512B
 		CALL	memcpy
 ;所有剩下其它的，参考ipl.asm是加载到0x0820这个位置
-		MOV		ESI,DSKCAC0+512		;源地址 
+		MOV		ESI,DSKCAC0+512	;源地址 
 		MOV		EDI,DSKCAC+512	;目标地址
 		MOV		ECX,0
 		MOV		CL,BYTE[CYLS]	;读出柱面数
@@ -90,18 +88,18 @@ pipelineflush:
 ;0x0018 (DWORD) ……0xe9000000
 ;0x001c (DWORD) ……应用程序运行入口地址 - 0x20
 ;0x0020 (DWORD) ……malloc空间的起始地址
-		MOV 	EBX,BOTPAK
+		MOV		EBX,BOTPAK
 		MOV		ECX,[EBX+16]
-		ADD		ECX,3			;这个地方为啥要加3？
-		SHR		ECX,2			;除以4，计算memcpy要转运的次数
-		JZ		skip
-		MOV		ESI,[EBX+20]	;源地址
+		ADD		ECX,3			; ECX += 3;
+		SHR		ECX,2			; ECX /= 4;
+		JZ		skip			
+		MOV		ESI,[EBX+20]	
 		ADD		ESI,EBX
-		MOV		EDI,[EBX+12]	;目标地址
+		MOV		EDI,[EBX+12]	
 		CALL	memcpy
 skip:
-		MOV		ESP,[EBX+12]	;栈初始值
-		JMP		DWORD 2*8:0x0000001b;2是段号，因为在0x0018（其实是0x001b）写了一个JMP指令，这样可以通过JMP指令跳转到应用程序的运行入口地址。通过这样的处理，只要先JMP到0x001b这个地址，程序就可以开始运行了。
+		MOV		ESP,[EBX+12]
+		JMP		DWORD 2*8:0x0000001b	;2是段号,书中解释，0x1b这个地方放的有程序的入口NoobMain的地址 类似于 CALL    0x1b
 ;内存复制
 memcpy:
 		MOV		EAX,[ESI]		;把ESI地址的内容复制给EAX
@@ -111,7 +109,8 @@ memcpy:
 		SUB		ECX,1			;ECX里面存放的是需要复制的个数，每个是4个字节，因为寄存器是32位，一次转移4个字节
 		JNZ		memcpy			;如果没完成继续复制
 		RET
-
+		
+		ALIGNB	16
 
 ;全局描述符表GDT
 GDT0:

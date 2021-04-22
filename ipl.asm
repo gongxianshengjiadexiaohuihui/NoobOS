@@ -64,7 +64,7 @@ next:
     MOV     CL,1                ;重新设置扇面数为1
     ADD     DH,1                ;磁头号+1
     CMP     DH,2                
-    JBE     readloop            ;如果磁头号小于2,说明正反面没读完，继续加载
+    JB     readloop            ;如果磁头号小于2,说明正反面没读完，继续加载
     MOV     DH,0                ;重置磁头号是0
     ADD     CH,1                ;柱面号+1
     CMP     CH,CYLS             
@@ -73,6 +73,8 @@ next:
 ;开始执行加载程序和一些基础设定
 	MOV		[0xff0],CH			;将柱面数写入0xff0这个地址
 	JMP		0xc200				;跳转到0xc200这个地址，这个地址是bootload程序的起始地址
+error:
+    MOV     SI,msg
 putloop:
     MOV     AL,[SI]             ;将SI地址的1字节内容读入到AL,MOV必须保证源数据和目的数据必须一致。[]表示内存地址的意思,[]可作用的寄存器有限,(可作用数字)只有BX、BP、SI、DI。其它寄存器没有对应电路
     ADD     SI,1                ;将SI地址加1
@@ -85,16 +87,15 @@ putloop:
 fin:
     HLT                         ;让CPU进入待机状态(halt停止)
     JMP     fin                 ;无限循环
-error:
-    MOV     SI,msg
+
 msg:
     DB      0x0a,0x0a           ;两个换行
     DB      "LOAD,ERROR"
     DB      0x0a                ;换行
     DB      0
     
-   ;RESB    0x7dfe-$            ;nask填充0x00直到0x7dfe(510)这个地址
-	times 	510-($-$$) db 0		;nasm与上面同理	
+    RESB    0x7dfe-$            ;nask填充0x00直到0x7dfe(510)这个地址
+	;times 	510-($-$$) db 0		;nasm与上面同理	
 ; 启动区结束符(510,2)
     DB       0x55, 0xaa
  
