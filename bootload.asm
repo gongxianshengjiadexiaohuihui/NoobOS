@@ -103,7 +103,7 @@ skip:
 ;内存复制
 memcpy:
 		MOV		EAX,[ESI]		;把ESI地址的内容复制给EAX
-		ADD     ESI,4           ;ESI地址+4
+		ADD     ESI,4           ;ESI地址+4 内存的存储单元是字节，因此一个地址对应一个字节
 		MOV     [EDI],EAX		;把EAX的内容赋值给EDI内容的内存地址中
 		ADD		EDI,4			
 		SUB		ECX,1			;ECX里面存放的是需要复制的个数，每个是4个字节，因为寄存器是32位，一次转移4个字节
